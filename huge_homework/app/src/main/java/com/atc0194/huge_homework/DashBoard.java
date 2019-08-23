@@ -48,10 +48,10 @@ public class DashBoard extends View {
 
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = MeasureSpec.getSize(widthMeasureSpec);
-        int heitht = width / 2 / 4 * 5;
+        int height = width / 2 / 4 * 5;
         initIndex(width / 2 );
         //优化组件高度
-        setMeasuredDimension(width, heitht);
+        setMeasuredDimension(width, height);
     }
 
 
