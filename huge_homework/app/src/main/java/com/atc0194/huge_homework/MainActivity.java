@@ -1,18 +1,23 @@
 package com.atc0194.huge_homework;
 
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.Arrays;
 import java.util.Random;
-
-import vendor.autochips.hardware.dashboard.V1_0.IDashBoard;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -30,16 +35,44 @@ public class MainActivity extends AppCompatActivity {
     protected Button reset;
     protected Spinner nodeSpinner;
 
-    protected Handler handler = new Handler();
-    protected IDashBoard service;
+    private volatile IDashBoardServiceInterface dashBoardServiceProxy;
+    private ServiceConnection dashBoardServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            dashBoardServiceProxy = IDashBoardServiceInterface.Stub.asInterface(iBinder);
+            try {
+                dashBoardServiceProxy.registerCallback(mCallback);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
 
-    protected int fd;
-    protected String str;
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            try {
+                dashBoardServiceProxy.unregisterCallback(mCallback);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+            dashBoardServiceProxy = null;
+        }
+    };
 
-    protected String[] cmds;
+    protected String[] data;
     protected boolean turnLeft;
     protected int mass;
     protected int mileage;
+    protected int speed;
+
+    protected Handler handler = new Handler();
+
+    private IDashBoardCallback mCallback = new IDashBoardCallback.Stub() {
+        @Override
+        public void onResult(String rawData) throws RemoteException {
+            parseData(rawData);
+            updateUI();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,74 +89,99 @@ public class MainActivity extends AppCompatActivity {
             int max = 120;
             int min = 1;
             Random random = new Random();
-            int p = random.nextInt(max) % (max - min + 1) + min;
-            turnLeft = p < 60;
-            massDash.cgangePer(p / 120f);
-            mileageDash.cgangePer(p / 120f);
-            if(turnLeft)
-                FlashHelper.getInstance().startFlick(leftTurnSignal);
-            else
-                FlashHelper.getInstance().stopFlick(leftTurnSignal);
+            mass = random.nextInt(max) % (max - min + 1) + min;
+            speed = random.nextInt(max) % (max - min + 1) + min;
+            mileage = random.nextInt(max) % (max - min + 1) + min;
+            turnLeft = random.nextInt(max) % (max - min + 1) + min > 60;
+
+            updateUI();
+
         });
 
         reset.setOnClickListener(view -> {
-            massDash.cgangePer(0);
-            mileageDash.cgangePer(0);
-            FlashHelper.getInstance().stopFlick(leftTurnSignal);
+            mass = speed = mileage = 0;
+            turnLeft = false;
+
+            updateUI();
         });
 
-        //try {
-            //service = IDashBoard.getService();
-            String nodeName = nodeSpinner.getSelectedItem().toString();
-            Log.d(TAG, "nodeName: " + nodeName);
-            //fd = service.dashBoard_open(nodeName.toLowerCase());
-        //} catch (RemoteException e) {
-        //    e.printStackTrace();
-        //}
+        bindService(new Intent(MainActivity.this, DashBoardService.class),
+                dashBoardServiceConnection, BIND_AUTO_CREATE);
+
+
+        nodeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                while(dashBoardServiceProxy == null);
+                try {
+                    dashBoardServiceProxy.setBusType(adapterView.getItemAtPosition(i).toString());
+                    Log.d(TAG, "onItemSelected: " + adapterView.getItemAtPosition(i));
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
 
         /*new Thread(){
             @Override
             public void run() {
-                for (; ;) {
+                while(dashBoardServiceProxy == null);
+                for (;;) {
                     try {
-                        str = service.dashBoard_read(fd);
-                        cmds = str.split("_");
-                        Log.d(TAG, "cmds: " + cmds);
-
-                        turnLeft = cmds[0].equals("1");
-                        mass = Integer.valueOf(cmds[1]);
-                        mileage = Integer.valueOf(cmds[2]);
-
+                        if(!parseData(dashBoardServiceProxy.getData())){
+                            continue;
+                        }
                     } catch (RemoteException e) {
                         e.printStackTrace();
                     }
-                    handler.post(() -> {
-                        updateUI();
-                    });
+
+                    updateUI();
+
                 }
             }
         }.start();*/
 
     }
 
-    private void updateUI(){
-        if(turnLeft)
-            FlashHelper.getInstance().startFlick(leftTurnSignal);
-        else
-            FlashHelper.getInstance().stopFlick(leftTurnSignal);
+    private boolean parseData(String rawData) throws RemoteException {
+        String[] strs = rawData.split("_");
+        Log.d(TAG, "data: " + Arrays.toString(strs));
 
-        massDash.cgangePer(mass / 120f);
-        mileageDash.cgangePer(mileage / 120f);
+        if(Arrays.equals(data, strs)) {
+            return false;
+        }
+
+        data = strs;
+        turnLeft = data[0].equals("1");
+        mass = Integer.valueOf(data[1]);
+        mileage = Integer.valueOf(data[2]);
+        speed = Integer.valueOf(data[3]);
+
+        return true;
+    }
+
+    private void updateUI() {
+        handler.post(() -> {
+            if (turnLeft)
+                FlashHelper.getInstance().startFlick(leftTurnSignal);
+            else
+                FlashHelper.getInstance().stopFlick(leftTurnSignal);
+
+            massDash.cgangePer(mass / 120f);
+            mileageDash.cgangePer(mileage / 120f);
+        });
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        /*try {
-            service.dashBoard_close(fd);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }*/
+        unbindService(dashBoardServiceConnection);
     }
 
     /**
