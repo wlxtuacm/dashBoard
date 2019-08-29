@@ -4,33 +4,64 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#fff"
-    android:gravity="center"
-    android:orientation="horizontal">
+    android:orientation="vertical">
 
 
-    <Button
+    <LinearLayout
+        android:background="#fff"
+        android:gravity="center"
+        android:orientation="horizontal"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/leftTurnSignal"
+            android:layout_width="50dp"
+            android:layout_height="65dp"
+            android:src="@drawable/turnleft" />
+
+        <com.atc0194.huge_homework.DashBoard
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:id="@+id/mass_dash"
+            />
+
+        <com.atc0194.huge_homework.DashBoard
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:id="@+id/mileage_dash"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="rand"
-        android:id="@+id/rand"/>
+        android:layout_marginTop="50dp"
+        android:gravity="center">
 
-    <com.atc0194.huge_homework.DashBoard
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:id="@+id/dash"
-        />
 
-    <com.atc0194.huge_homework.DashBoard
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:id="@+id/dash2"
-        />
+        <androidx.appcompat.widget.AppCompatSpinner
+            android:id="@+id/nodeSpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:entries="@array/nodeName" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="return 0"
-        android:id="@+id/retu"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="random"
+            android:id="@+id/rand"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="100dp"
+            android:layout_marginLeft="100dp"
+            android:text="reset"
+            android:id="@+id/reset"/>
+
+
+    </LinearLayout>
 
 </LinearLayout>
