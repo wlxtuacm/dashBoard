@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Arrays;
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             dashBoardServiceProxy = IDashBoardServiceInterface.Stub.asInterface(iBinder);
+            Log.d(TAG, "onServiceConnected: " + dashBoardServiceProxy);
             try {
                 dashBoardServiceProxy.registerCallback(mCallback);
             } catch (RemoteException e) {
@@ -65,6 +67,24 @@ public class MainActivity extends AppCompatActivity {
     protected int speed;
 
     protected Handler handler = new Handler();
+    protected Thread pollingThread = new Thread(){
+        @Override
+        public void run() {
+            while(dashBoardServiceProxy == null);
+            for (;;) {
+                try {
+                    if(!parseData(dashBoardServiceProxy.getData())){
+                        continue;
+                    }
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+
+                updateUI();
+
+            }
+        }
+    };
 
     private IDashBoardCallback mCallback = new IDashBoardCallback.Stub() {
         @Override
@@ -112,9 +132,10 @@ public class MainActivity extends AppCompatActivity {
         nodeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                while(dashBoardServiceProxy == null);
                 try {
-                    dashBoardServiceProxy.setBusType(adapterView.getItemAtPosition(i).toString());
+                    if(dashBoardServiceProxy != null) {
+                        dashBoardServiceProxy.setBusType(adapterView.getItemAtPosition(i).toString());
+                    }
                     Log.d(TAG, "onItemSelected: " + adapterView.getItemAtPosition(i));
                 } catch (RemoteException e) {
                     e.printStackTrace();
@@ -127,29 +148,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        /*new Thread(){
-            @Override
-            public void run() {
-                while(dashBoardServiceProxy == null);
-                for (;;) {
-                    try {
-                        if(!parseData(dashBoardServiceProxy.getData())){
-                            continue;
-                        }
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-
-                    updateUI();
-
-                }
-            }
-        }.start();*/
-
+        //pollingThread.start();
     }
 
-    private boolean parseData(String rawData) throws RemoteException {
+    private boolean parseData(@NonNull String rawData) throws RemoteException {
         String[] strs = rawData.split("_");
         Log.d(TAG, "data: " + Arrays.toString(strs));
 
@@ -181,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        pollingThread.interrupt();
         unbindService(dashBoardServiceConnection);
     }
 

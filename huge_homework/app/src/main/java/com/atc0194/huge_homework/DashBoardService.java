@@ -2,12 +2,15 @@ package com.atc0194.huge_homework;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.util.Log;
+import android.widget.Toast;
 
-import java.util.Random;
+import java.util.NoSuchElementException;
 
 import vendor.autochips.hardware.dashboard.V1_0.IDashBoard;
 
@@ -23,6 +26,8 @@ public class DashBoardService extends Service {
     private String rawData = "";
     private String preData = "";
 
+    private boolean testMode;
+
     public DashBoardService() {
     }
 
@@ -31,19 +36,23 @@ public class DashBoardService extends Service {
         Log.d(TAG, "onBind: ");
         new Thread(() -> {
             for(;;) {
-                /*try {
-                    rawData = service.dashBoard_read(fd);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }*/
-                if(busType.equals("I2C"))
-                    rawData = "1_90_24_12";
-                else if(busType.equals("SPI")){
-                    rawData = "0_70_30_13";
-                }else{
-                    rawData = "1_100_12_89";
+                if(!testMode) {
+                    try {
+                        rawData = service.dashBoard_read(fd);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }else {
+                    if (busType.equals("I2C"))
+                        rawData = "1_90_24_12";
+                    else if (busType.equals("SPI")) {
+                        rawData = "0_70_30_13";
+                    } else {
+                        rawData = "1_100_12_89";
+                    }
                 }
-                if(preData.equals(rawData))
+
+                if (preData.equals(rawData))
                     continue;
 
                 try {
@@ -53,8 +62,6 @@ public class DashBoardService extends Service {
                     e.printStackTrace();
                 }
                 preData = rawData;
-
-
             }
         }).start();
 
@@ -104,12 +111,19 @@ public class DashBoardService extends Service {
     public void onCreate() {
         Log.d(TAG, "onCreate: ");
         super.onCreate();
-        /*try {
-        service = IDashBoard.getService();
-        fd = service.dashBoard_open(busType);
+
+        try {
+            service = IDashBoard.getService();
+            fd = service.dashBoard_open(busType);
         } catch (RemoteException e) {
             e.printStackTrace();
-        }*/
+        } catch (NoSuchElementException e) {
+            Log.e(TAG, "getService fail, now in test mode");
+            new Handler().post(() -> {
+                Toast.makeText(getApplicationContext(), "getService fail, now in test mode", Toast.LENGTH_LONG).show();
+            });
+            testMode = true;
+        }
     }
 
     @Override
@@ -121,10 +135,13 @@ public class DashBoardService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        /*try {
-            service.dashBoard_close(fd);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }*/
+        mCallbacks.kill();
+        if(!testMode) {
+            try {
+                service.dashBoard_close(fd);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

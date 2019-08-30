@@ -6,4 +6,9 @@
         <item>UART</item>
         <item>DUMMY</item>
     </string-array>
+
+    <string-array name="pollingOrCallback">
+        <item>Polling</item>
+        <item>Callback</item>
+    </string-array>
 </resources>
