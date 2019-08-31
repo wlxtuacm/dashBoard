@@ -12,7 +12,8 @@
         <service
             android:name=".DashBoardService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="true"
+            android:process=":DashBoardService"/>
 
         <activity android:name=".MainActivity">
             <intent-filter>

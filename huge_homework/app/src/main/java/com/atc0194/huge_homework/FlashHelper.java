@@ -6,9 +6,8 @@ import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 
 /**
- * Title:控件闪烁帮助类
- * Description:
- * <p>
+ * Title:FlashHelper
+ * Description:控件闪烁辅助类
  * Created by atc0194
  * Date: 2019/8/22
  */

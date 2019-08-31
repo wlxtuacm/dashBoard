@@ -20,7 +20,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.Arrays;
 import java.util.Random;
 
-
+/**
+ * Title:MainActivity
+ * Description:前台Activity，实时显示和更新UI
+ * Created by atc0190
+ * Date: 2019/8/23
+ */
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
@@ -30,13 +35,13 @@ public class MainActivity extends AppCompatActivity {
         System.loadLibrary("native-lib");
     }
 
-    protected DashBoard massDash;
-    protected DashBoard mileageDash;
+    protected DashBoardView massDash;
+    protected DashBoardView mileageDash;
     protected ImageView leftTurnSignal;
     protected Button reset;
     protected Spinner nodeSpinner;
 
-    private volatile IDashBoardServiceInterface dashBoardServiceProxy;
+    private IDashBoardServiceInterface dashBoardServiceProxy;
     private ServiceConnection dashBoardServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -60,13 +65,19 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    //data read from driver through hal
     protected String[] data;
     protected boolean turnLeft;
     protected int mass;
     protected int mileage;
     protected int speed;
 
+    //a handler for those operations like updating UI
     protected Handler handler = new Handler();
+
+    //a thread for reading data continuously from DashBoardService by polling
+    // , which has been replaced by Callback
+    @Deprecated
     protected Thread pollingThread = new Thread(){
         @Override
         public void run() {
@@ -79,13 +90,12 @@ public class MainActivity extends AppCompatActivity {
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
-
                 updateUI();
-
             }
         }
     };
 
+    //Callback from DashBoardService
     private IDashBoardCallback mCallback = new IDashBoardCallback.Stub() {
         @Override
         public void onResult(String rawData) throws RemoteException {
@@ -128,7 +138,6 @@ public class MainActivity extends AppCompatActivity {
         bindService(new Intent(MainActivity.this, DashBoardService.class),
                 dashBoardServiceConnection, BIND_AUTO_CREATE);
 
-
         nodeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -151,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         //pollingThread.start();
     }
 
-    private boolean parseData(@NonNull String rawData) throws RemoteException {
+    private boolean parseData(@NonNull String rawData) {
         String[] strs = rawData.split("_");
         Log.d(TAG, "data: " + Arrays.toString(strs));
 
@@ -183,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        pollingThread.interrupt();
+        //pollingThread.interrupt();
         unbindService(dashBoardServiceConnection);
     }
 

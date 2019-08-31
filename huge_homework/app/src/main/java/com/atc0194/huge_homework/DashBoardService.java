@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.util.Log;
@@ -14,6 +13,12 @@ import java.util.NoSuchElementException;
 
 import vendor.autochips.hardware.dashboard.V1_0.IDashBoard;
 
+/**
+ * Title:DashBoardService
+ * Description:后台Service，实时获取驱动信息
+ * Created by atc0190
+ * Date: 2019/8/23
+ */
 public class DashBoardService extends Service {
 
     private static final String TAG = "DashBoardService";
@@ -23,9 +28,12 @@ public class DashBoardService extends Service {
     protected int fd;
 
     private String busType = "I2C";
+    //data from driver
     private String rawData = "";
+    //last different rawData
     private String preData = "";
 
+    //testMode use hardcode
     private boolean testMode;
 
     public DashBoardService() {
@@ -56,7 +64,7 @@ public class DashBoardService extends Service {
                     continue;
 
                 try {
-                    Log.d(TAG, "callback: ");
+                    Log.d(TAG, "callback rawData: " + rawData);
                     callback(rawData);
                 } catch (RemoteException e) {
                     e.printStackTrace();
@@ -109,7 +117,6 @@ public class DashBoardService extends Service {
 
     @Override
     public void onCreate() {
-        Log.d(TAG, "onCreate: ");
         super.onCreate();
 
         try {
