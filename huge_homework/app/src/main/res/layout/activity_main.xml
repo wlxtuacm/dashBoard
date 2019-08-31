@@ -20,13 +20,13 @@
             android:layout_height="65dp"
             android:src="@drawable/turnleft" />
 
-        <com.atc0194.huge_homework.DashBoard
+        <com.atc0194.huge_homework.DashBoardView
             android:layout_width="300dp"
             android:layout_height="300dp"
             android:id="@+id/mass_dash"
             />
 
-        <com.atc0194.huge_homework.DashBoard
+        <com.atc0194.huge_homework.DashBoardView
             android:layout_width="300dp"
             android:layout_height="300dp"
             android:id="@+id/mileage_dash"

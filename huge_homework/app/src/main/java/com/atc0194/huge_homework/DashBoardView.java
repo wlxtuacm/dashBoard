@@ -15,11 +15,13 @@ import android.view.animation.OvershootInterpolator;
 
 import androidx.annotation.Nullable;
 
-
 /**
- * Created by gengzhibo on 17/8/3.
+ * Title:DashBoardView
+ * Description:仪表盘的绘制和更新
+ * Created by atc0194
+ * Date: 2019/8/22
  */
-public class DashBoard extends View {
+public class DashBoardView extends View {
 
 
 
@@ -33,14 +35,14 @@ public class DashBoard extends View {
     private float length ;          //仪表盘半径
     private float r ;
 
-    public DashBoard(Context context) {
+    public DashBoardView(Context context) {
         super(context);
         init();
     }
 
 
 
-    public DashBoard(Context context, @Nullable AttributeSet attrs) {
+    public DashBoardView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init();
     }
@@ -74,7 +76,7 @@ public class DashBoard extends View {
         strokePain = new Paint();
     }
 
-    public DashBoard(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public DashBoardView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }
@@ -169,7 +171,7 @@ public class DashBoard extends View {
         this.backGroundColor = color;
     }
 
-    public void setPointLength1(float pointLength1){
+    public void setPointLength(float pointLength1){
         this.pointLength = -length * pointLength1 ;
     }
 
