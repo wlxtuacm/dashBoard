@@ -15,15 +15,22 @@ public class DashBoardData {
     private static final String TAG = "DashBoardData";
 
     //max mileage: 100w km
-    private static final int MAX_MILEAGE = 100_0000;
+    public static final int MAX_MILEAGE = 100_0000;
     //max speed: 180 km/h
-    private static final int MAX_SPEED = 180;
+    public static final int MAX_SPEED = 180;
+    //max speed: 100
+    public static final int MAX_MASS = 100;
 
-    private static final int paramsNum = 4;
+    public static final int paramsNum = 4;
 
-    private static final String SPLITCHAR = "_";
+    public static final String SPLITCHAR = "_";
 
     private String lastRawData = "";
+
+    public String[] getSpitData() {
+        return spitData;
+    }
+
     private String[] spitData;
 
     private boolean turnLeft;
@@ -64,13 +71,18 @@ public class DashBoardData {
     }
 
     private void checkParamsRange() {
+        if(Integer.valueOf(spitData[1]) < 0 || Integer.valueOf(spitData[1]) > MAX_MASS) {
+            throw new IllegalArgumentException("mass " + spitData[1] +
+                    " is out of range [0," + MAX_MASS + "]");
+        }
+
         if(Integer.valueOf(spitData[2]) < 0 || Integer.valueOf(spitData[2]) >= MAX_MILEAGE) {
             throw new IllegalArgumentException("mileage " + spitData[2] +
                     " is out of range [0," + MAX_MILEAGE + ")");
         }
 
         if(Integer.valueOf(spitData[3]) < 0 || Integer.valueOf(spitData[3]) > MAX_SPEED) {
-            throw new IllegalArgumentException("speed " + speed +
+            throw new IllegalArgumentException("speed " + spitData[3] +
                     " is out of range [0," + MAX_SPEED + "]");
         }
     }
@@ -87,7 +99,6 @@ public class DashBoardData {
 
     public void parseData() {
         spitData = lastRawData.split(SPLITCHAR);
-        Log.d(TAG, "rawData: " + lastRawData);
 
         checkParamsNum();
 

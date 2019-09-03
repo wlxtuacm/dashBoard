@@ -37,8 +37,6 @@ public class MainActivity extends AppCompatActivity {
     private SpeedDashBoardView speedDash;
     private MassDashBoardView massDash;
     private ImageView leftTurnSignal;
-    private Button reset;
-    private Spinner nodeSpinner;
 
     private volatile IDashBoardServiceInterface dashBoardServiceProxy;
     private final ServiceConnection dashBoardServiceConnection = new ServiceConnection() {
@@ -102,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onResult(String rawData) throws RemoteException {
             try {
+                Log.d(TAG, "rawData: " + rawData);
                 data.parseData(rawData);
             }catch (IllegalArgumentException e){
                 e.printStackTrace();
@@ -120,17 +119,15 @@ public class MainActivity extends AppCompatActivity {
         speedDash = findViewById(R.id.speed_dash);
         massDash = findViewById(R.id.mass_dash);
         leftTurnSignal = findViewById(R.id.leftTurnSignal);
-        reset = findViewById(R.id.reset);
-        nodeSpinner = findViewById(R.id.nodeSpinner);
+        Button reset = findViewById(R.id.reset);
+        Spinner nodeSpinner = findViewById(R.id.nodeSpinner);
 
         findViewById(R.id.rand).setOnClickListener(view -> {
-            int max = 120;
-            int min = 1;
             Random random = new Random();
-            data.setData(random.nextInt(max) % (max - min + 1) + min > 60,
-                    random.nextInt(max) % (max - min + 1) + min,
-                    random.nextInt(max) % (max - min + 1) + min,
-                    random.nextInt(max) % (max - min + 1) + min);
+            data.setData(random.nextInt(2) > 1,
+                    random.nextInt(DashBoardData.MAX_MASS),
+                    random.nextInt(DashBoardData.MAX_MILEAGE),
+                    random.nextInt(DashBoardData.MAX_SPEED));
             Log.d(TAG, "emulation " + data.getData());
 
             updateUI();
