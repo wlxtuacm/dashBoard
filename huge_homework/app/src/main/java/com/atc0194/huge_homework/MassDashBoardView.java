@@ -17,13 +17,11 @@ import androidx.annotation.Nullable;
 
 /**
  * Title:DashBoardView
- * Description:仪表盘的绘制和更新
+ * Description:油量仪表盘和里程数的绘制和更新
  * Created by atc0194
- * Date: 2019/8/22
+ * Date: 2019/9/02
  */
-public class DashBoardView extends View {
-
-
+public class MassDashBoardView extends View {
 
     private Paint paint , tmpPaint , textPaint ,  strokePain;
     private RectF rect;
@@ -34,19 +32,17 @@ public class DashBoardView extends View {
     private float perOld ;          //变化前指针百分比
     private float length ;          //仪表盘半径
     private float r ;
+    private int   mileage;
 
-    public DashBoardView(Context context) {
+    public MassDashBoardView(Context context) {
         super(context);
         init();
     }
 
-
-
-    public DashBoardView(Context context, @Nullable AttributeSet attrs) {
+    public MassDashBoardView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init();
     }
-
 
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = MeasureSpec.getSize(widthMeasureSpec);
@@ -76,7 +72,7 @@ public class DashBoardView extends View {
         strokePain = new Paint();
     }
 
-    public DashBoardView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public MassDashBoardView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }
@@ -127,32 +123,30 @@ public class DashBoardView extends View {
         textPaint.setStrokeWidth(1);
         textPaint.setAntiAlias(true);
 
-        textPaint.setTextSize(60);
+        textPaint.setTextSize(43);
         textPaint.setColor(Color.parseColor("#fc6555"));
         textPaint.setTextAlign(Paint.Align.RIGHT);
 
 
         //判断指数变化及颜色设定
 
-        int _per = (int) (per * 120);
-
-        if (_per < 60){
+        if (mileage < 100000){
             textPaint.setColor(Color.parseColor("#79d062"));
-        }else if (_per < 100) {
+        }else if (mileage < 500000) {
             textPaint.setColor(Color.parseColor("#f5a623"));
         }else {
             textPaint.setColor(Color.parseColor("#ff6450"));
         }
 
-        float swidth = textPaint.measureText(String.valueOf(_per));
+        float swidth = textPaint.measureText(String.valueOf(mileage));
         //计算偏移量 是的数字和百分号整体居中显示
-        swidth =   (swidth - (swidth + 22) / 2 + 11);
+        swidth =   (swidth - (swidth + 22) / 2 + 14);
 
 
         canvas.translate( swidth , 0);
-        canvas.drawText("" + _per, 0, 0, textPaint);
+        canvas.drawText("" + mileage, 0, 0, textPaint);
 
-        textPaint.setTextSize(30);
+        textPaint.setTextSize(40);
         textPaint.setTextAlign(Paint.Align.LEFT);
 
         //canvas.drawText("%" , 0, 0, textPaint);
@@ -163,7 +157,7 @@ public class DashBoardView extends View {
         canvas.restore();
         canvas.save();
         canvas.translate(canvas.getWidth()/2  , r + length / 3 /2 );
-        canvas.drawText("km/h" , 0, 0, textPaint);
+        canvas.drawText("km" , 0, 0, textPaint);
     }
 
 
@@ -171,7 +165,7 @@ public class DashBoardView extends View {
         this.backGroundColor = color;
     }
 
-    public void setPointLength(float pointLength1){
+    public void setPointLength1(float pointLength1){
         this.pointLength = -length * pointLength1 ;
     }
 
@@ -192,19 +186,24 @@ public class DashBoardView extends View {
 
         float  y = length;
         y = - y;
-        int count = 12; //总刻度数
+        int count = 16; //总刻度数
         paint.setColor(backGroundColor);
 
-        float tempRou = 180 / 12f;
+        float tempRou = 180 / 16f;
 
         paint.setColor(Color.WHITE);
         paint.setStrokeWidth(5);
 
         //绘制刻度和百分比
         for (int i = 0 ; i <= count ; i++){
-
-            if (i % 2 == 0 ) {
-                canvas.drawText(String.valueOf((i) * 10), 0, y - 20f, tmpPaint);
+            if(i == 0) {
+                canvas.drawText(String.valueOf(0),0, y - 20f, tmpPaint);
+            } else if (i  == 2 || i == 4 || i == 8 ) {
+                canvas.drawText("1/"  + String.valueOf(16 / i) , 0, y - 20f, tmpPaint);
+            } else if(i == 16) {
+                canvas.drawText(String.valueOf(1),0, y - 20f, tmpPaint);
+            } else if(i == 12 ) {
+                canvas.drawText("3/4",0, y - 20f, tmpPaint);
             }
 
             canvas.drawLine(0f, y , 0, y + length / 15, paint);
@@ -255,8 +254,8 @@ public class DashBoardView extends View {
 
         //前100红黄渐变圆环
         paint.setStyle(Paint.Style.FILL);
-        int[] colors = {Color.parseColor("#F95A37"), Color.parseColor("#f9cf45"), Color.parseColor("#00ff00")};
-        float[] positions = {0.5f - 10f/180f * 0.5f, 0.5f + 0.5f * 5f / 6f, 1.0f};
+        int[] colors = {Color.parseColor("#F95A37"), Color.parseColor("#f9cf45"), Color.parseColor("#2EFE64")};
+        float[] positions = {0.5f - 10f/180f * 0.5f, 0.5f + 0.5f * 1f / 4f, 1.0f};
         SweepGradient sweepGradient = new SweepGradient(0, 0, colors, positions);
         paint.setShader(sweepGradient);
         rect = new RectF( -length, -length, length, length);
@@ -267,8 +266,8 @@ public class DashBoardView extends View {
         //100之后绿色渐变圆环
         paint.setStyle(Paint.Style.FILL);
         canvas.rotate(10,0f,0f);
-        int[] colors2 = {Color.parseColor("#79D062"),  Color.parseColor("#3FBF55")};
-        float[] positions2 = {0.5f + 0.5f * ( 144f / 180f), 1.0f};
+        int[] colors2 = {Color.parseColor("#2EFE64"), Color.parseColor("#01DF3A")};
+        float[] positions2 = {0.5f + 0.5f * ( 1.08f / 4f), 1.0f};
         sweepGradient = new SweepGradient(0, 0, colors2, positions2);
         paint.setShader(sweepGradient);
         rect = new RectF( -length, -length, length, length);
@@ -317,6 +316,7 @@ public class DashBoardView extends View {
 
     public void cgangePer(float per ){
         this.perOld = this.per;
+        per /= 100;
         this.per = per;
         ValueAnimator va =  ValueAnimator.ofFloat(perOld,per);
         va.setDuration(1000);
@@ -331,4 +331,9 @@ public class DashBoardView extends View {
         va.start();
 
     }
+
+    public void setMileage(int mileage) {
+        this.mileage = mileage;
+    }
 }
+

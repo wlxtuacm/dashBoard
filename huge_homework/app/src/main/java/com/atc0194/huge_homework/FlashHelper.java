@@ -16,7 +16,7 @@ public class FlashHelper {
     private FlashHelper() {}
 
     private static class Holder {
-        private static FlashHelper instance = new FlashHelper();
+        private static final FlashHelper instance = new FlashHelper();
     }
 
     public static FlashHelper getInstance() {

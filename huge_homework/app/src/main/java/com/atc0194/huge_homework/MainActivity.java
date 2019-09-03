@@ -13,11 +13,10 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -35,14 +34,14 @@ public class MainActivity extends AppCompatActivity {
         System.loadLibrary("native-lib");
     }
 
-    protected DashBoardView massDash;
-    protected DashBoardView mileageDash;
-    protected ImageView leftTurnSignal;
-    protected Button reset;
-    protected Spinner nodeSpinner;
+    private SpeedDashBoardView speedDash;
+    private MassDashBoardView massDash;
+    private ImageView leftTurnSignal;
+    private Button reset;
+    private Spinner nodeSpinner;
 
-    private IDashBoardServiceInterface dashBoardServiceProxy;
-    private ServiceConnection dashBoardServiceConnection = new ServiceConnection() {
+    private volatile IDashBoardServiceInterface dashBoardServiceProxy;
+    private final ServiceConnection dashBoardServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             dashBoardServiceProxy = IDashBoardServiceInterface.Stub.asInterface(iBinder);
@@ -66,14 +65,10 @@ public class MainActivity extends AppCompatActivity {
     };
 
     //data read from driver through hal
-    protected String[] data;
-    protected boolean turnLeft;
-    protected int mass;
-    protected int mileage;
-    protected int speed;
+    private DashBoardData data = new DashBoardData();
 
     //a handler for those operations like updating UI
-    protected Handler handler = new Handler();
+    private final Handler handler = new Handler();
 
     //a thread for reading data continuously from DashBoardService by polling
     // , which has been replaced by Callback
@@ -82,13 +77,20 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             while(dashBoardServiceProxy == null);
+            String rawData;
             for (;;) {
                 try {
-                    if(!parseData(dashBoardServiceProxy.getData())){
+                    rawData = dashBoardServiceProxy.getData();
+                    if(!data.checkIsSame(rawData)){
                         continue;
                     }
+                    data.parseData(rawData);
                 } catch (RemoteException e) {
                     e.printStackTrace();
+                } catch (IllegalArgumentException e){
+                    e.printStackTrace();
+                    handler.post(() -> Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show());
+                    continue;
                 }
                 updateUI();
             }
@@ -96,10 +98,16 @@ public class MainActivity extends AppCompatActivity {
     };
 
     //Callback from DashBoardService
-    private IDashBoardCallback mCallback = new IDashBoardCallback.Stub() {
+    private final IDashBoardCallback mCallback = new IDashBoardCallback.Stub() {
         @Override
         public void onResult(String rawData) throws RemoteException {
-            parseData(rawData);
+            try {
+                data.parseData(rawData);
+            }catch (IllegalArgumentException e){
+                e.printStackTrace();
+                handler.post(() -> Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show());
+                return;
+            }
             updateUI();
         }
     };
@@ -109,8 +117,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        speedDash = findViewById(R.id.speed_dash);
         massDash = findViewById(R.id.mass_dash);
-        mileageDash = findViewById(R.id.mileage_dash);
         leftTurnSignal = findViewById(R.id.leftTurnSignal);
         reset = findViewById(R.id.reset);
         nodeSpinner = findViewById(R.id.nodeSpinner);
@@ -119,19 +127,18 @@ public class MainActivity extends AppCompatActivity {
             int max = 120;
             int min = 1;
             Random random = new Random();
-            mass = random.nextInt(max) % (max - min + 1) + min;
-            speed = random.nextInt(max) % (max - min + 1) + min;
-            mileage = random.nextInt(max) % (max - min + 1) + min;
-            turnLeft = random.nextInt(max) % (max - min + 1) + min > 60;
+            data.setData(random.nextInt(max) % (max - min + 1) + min > 60,
+                    random.nextInt(max) % (max - min + 1) + min,
+                    random.nextInt(max) % (max - min + 1) + min,
+                    random.nextInt(max) % (max - min + 1) + min);
+            Log.d(TAG, "emulation " + data.getData());
 
             updateUI();
 
         });
 
         reset.setOnClickListener(view -> {
-            mass = speed = mileage = 0;
-            turnLeft = false;
-
+            data.reset();
             updateUI();
         });
 
@@ -160,32 +167,17 @@ public class MainActivity extends AppCompatActivity {
         //pollingThread.start();
     }
 
-    private boolean parseData(@NonNull String rawData) {
-        String[] strs = rawData.split("_");
-        Log.d(TAG, "data: " + Arrays.toString(strs));
-
-        if(Arrays.equals(data, strs)) {
-            return false;
-        }
-
-        data = strs;
-        turnLeft = data[0].equals("1");
-        mass = Integer.valueOf(data[1]);
-        mileage = Integer.valueOf(data[2]);
-        speed = Integer.valueOf(data[3]);
-
-        return true;
-    }
-
     private void updateUI() {
         handler.post(() -> {
-            if (turnLeft)
+            if (data.isTurnLeft()) {
                 FlashHelper.getInstance().startFlick(leftTurnSignal);
-            else
+            } else {
                 FlashHelper.getInstance().stopFlick(leftTurnSignal);
+            }
 
-            massDash.cgangePer(mass / 120f);
-            mileageDash.cgangePer(mileage / 120f);
+            speedDash.cgangePer(data.getSpeed());
+            massDash.cgangePer(data.getMass());
+            massDash.setMileage(data.getMileage());
         });
     }
 

@@ -10,6 +10,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.util.NoSuchElementException;
+import java.util.Random;
 
 import vendor.autochips.hardware.dashboard.V1_0.IDashBoard;
 
@@ -23,9 +24,9 @@ public class DashBoardService extends Service {
 
     private static final String TAG = "DashBoardService";
 
-    protected IDashBoard service;
+    private IDashBoard service;
 
-    protected int fd;
+    private int fd;
 
     private String busType = "I2C";
     //data from driver
@@ -35,6 +36,7 @@ public class DashBoardService extends Service {
 
     //testMode use hardcode
     private boolean testMode;
+    private DashBoardData emulation;
 
     public DashBoardService() {
     }
@@ -42,6 +44,7 @@ public class DashBoardService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind: ");
+
         new Thread(() -> {
             for(;;) {
                 if(!testMode) {
@@ -51,13 +54,7 @@ public class DashBoardService extends Service {
                         e.printStackTrace();
                     }
                 }else {
-                    if (busType.equals("I2C"))
-                        rawData = "1_90_24_12";
-                    else if (busType.equals("SPI")) {
-                        rawData = "0_70_30_13";
-                    } else {
-                        rawData = "1_100_12_89";
-                    }
+                    rawData = emulation.getData();
                 }
 
                 if (preData.equals(rawData))
@@ -79,7 +76,7 @@ public class DashBoardService extends Service {
     private final RemoteCallbackList<IDashBoardCallback> mCallbacks =
             new RemoteCallbackList<>();
 
-    public IDashBoardServiceInterface.Stub dashBoardServiceStub =
+    private final IDashBoardServiceInterface.Stub dashBoardServiceStub =
             new IDashBoardServiceInterface.Stub() {
         @Override
         public void setBusType(String busType) throws RemoteException {
@@ -126,10 +123,27 @@ public class DashBoardService extends Service {
             e.printStackTrace();
         } catch (NoSuchElementException e) {
             Log.e(TAG, "getService fail, now in test mode");
-            new Handler().post(() -> {
-                Toast.makeText(getApplicationContext(), "getService fail, now in test mode", Toast.LENGTH_LONG).show();
-            });
+            new Handler().post(() -> Toast.makeText(getApplicationContext(), "getService fail, now in test mode", Toast.LENGTH_LONG).show());
             testMode = true;
+            emulation = new DashBoardData();
+
+            new Thread(() -> {
+                int max = 220;
+                int min = 1;
+                Random random = new Random();
+                for(;;) {
+                    emulation.setData(random.nextInt(max) % (max - min + 1) + min > 90,
+                            random.nextInt(100) % (100 - 0 + 1) + min,
+                            random.nextInt(100_0000) % (100_0000 - 0 + 1) + min,
+                            random.nextInt(180) % (180 - 0 + 1) + min);
+                    Log.d(TAG, "emulation " + emulation.getData());
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+            }).start();
         }
     }
 
