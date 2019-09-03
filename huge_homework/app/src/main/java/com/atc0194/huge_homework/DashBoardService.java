@@ -128,14 +128,12 @@ public class DashBoardService extends Service {
             emulation = new DashBoardData();
 
             new Thread(() -> {
-                int max = 220;
-                int min = 1;
                 Random random = new Random();
                 for(;;) {
-                    emulation.setData(random.nextInt(max) % (max - min + 1) + min > 90,
-                            random.nextInt(100) % (100 - 0 + 1) + min,
-                            random.nextInt(100_0000) % (100_0000 - 0 + 1) + min,
-                            random.nextInt(180) % (180 - 0 + 1) + min);
+                    emulation.setData(random.nextInt(2) >= 1,
+                            random.nextInt(DashBoardData.MAX_MASS + 20),
+                            random.nextInt(DashBoardData.MAX_MILEAGE + 10000),
+                            random.nextInt(DashBoardData.MAX_SPEED + 50));
                     Log.d(TAG, "emulation " + emulation.getData());
                     try {
                         Thread.sleep(2000);
