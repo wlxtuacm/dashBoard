@@ -8,11 +8,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -120,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
         massDash = findViewById(R.id.mass_dash);
         leftTurnSignal = findViewById(R.id.leftTurnSignal);
         Button reset = findViewById(R.id.reset);
-        Spinner nodeSpinner = findViewById(R.id.nodeSpinner);
 
         findViewById(R.id.rand).setOnClickListener(view -> {
             Random random = new Random();
@@ -141,25 +137,6 @@ public class MainActivity extends AppCompatActivity {
 
         bindService(new Intent(MainActivity.this, DashBoardService.class),
                 dashBoardServiceConnection, BIND_AUTO_CREATE);
-
-        nodeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                try {
-                    if(dashBoardServiceProxy != null) {
-                        dashBoardServiceProxy.setBusType(adapterView.getItemAtPosition(i).toString());
-                    }
-                    Log.d(TAG, "onItemSelected: " + adapterView.getItemAtPosition(i));
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
 
         //pollingThread.start();
     }

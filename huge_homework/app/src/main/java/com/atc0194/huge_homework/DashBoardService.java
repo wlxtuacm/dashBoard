@@ -78,10 +78,6 @@ public class DashBoardService extends Service {
 
     private final IDashBoardServiceInterface.Stub dashBoardServiceStub =
             new IDashBoardServiceInterface.Stub() {
-        @Override
-        public void setBusType(String busType) throws RemoteException {
-            DashBoardService.this.busType = busType;
-        }
 
         @Override
         public String getData() throws RemoteException {

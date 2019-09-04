@@ -40,13 +40,6 @@
         android:layout_marginTop="50dp"
         android:gravity="center">
 
-
-        <androidx.appcompat.widget.AppCompatSpinner
-            android:id="@+id/nodeSpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:entries="@array/busType" />
-
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -56,7 +49,6 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="100dp"
             android:layout_marginLeft="100dp"
             android:text="reset"
             android:id="@+id/reset"/>
