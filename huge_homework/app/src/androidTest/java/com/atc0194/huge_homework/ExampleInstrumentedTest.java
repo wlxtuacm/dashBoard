@@ -8,7 +8,7 @@ import androidx.test.runner.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -24,4 +24,5 @@ public class ExampleInstrumentedTest {
 
         assertEquals("com.atc0194.huge_homework", appContext.getPackageName());
     }
+
 }

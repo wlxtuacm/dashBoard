@@ -1,7 +1,5 @@
 package com.atc0194.huge_homework;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 /**
