@@ -110,9 +110,10 @@ public class MassDashBoardView extends View {
         paint.setColor(Color.parseColor("#eeeeee"));
         paint.setShader(null);
         paint.setShadowLayer(5, 0, 0, 0x54000000);
-        rect = new RectF( - (rIndex/ 3 ), - (rIndex / 3), rIndex / 3, rIndex / 3);
-        canvas.drawArc(rect, 0, 360, true, paint);
-
+        //rect = new RectF( );
+        // canvas.drawArc(rect, 0, 360, true, paint);
+        canvas.drawRect(- (int)(rIndex/ 2 ), - (rIndex / 6), (int)(rIndex / 2), rIndex / 6, paint);
+        //canvas.drawRect(-rIndex, -rIndex, rIndex, rIndex, paint);
         paint.clearShadowLayer();
 
         canvas.restore();
@@ -123,28 +124,30 @@ public class MassDashBoardView extends View {
         textPaint.setStrokeWidth(1);
         textPaint.setAntiAlias(true);
 
-        textPaint.setTextSize(43);
+        textPaint.setTextSize(45);
         textPaint.setColor(Color.parseColor("#fc6555"));
         textPaint.setTextAlign(Paint.Align.RIGHT);
 
 
         //判断指数变化及颜色设定
 
-        if (mileage < 100000){
+        int _per = mileage;
+        //Toast toast=Toast.makeText(MainActivity.this, "默认的Toast", Toast.LENGTH_SHORT);
+        if (_per < 100000){
             textPaint.setColor(Color.parseColor("#79d062"));
-        }else if (mileage < 500000) {
+        }else if (_per < 500000) {
             textPaint.setColor(Color.parseColor("#f5a623"));
         }else {
             textPaint.setColor(Color.parseColor("#ff6450"));
         }
 
-        float swidth = textPaint.measureText(String.valueOf(mileage));
+        float swidth = textPaint.measureText(String.valueOf(_per));
         //计算偏移量 是的数字和百分号整体居中显示
-        swidth =   (swidth - (swidth + 22) / 2 + 14);
+        swidth =   (swidth - (swidth + 22) / 2 - 20);
 
 
-        canvas.translate( swidth , 0);
-        canvas.drawText("" + mileage, 0, 0, textPaint);
+        canvas.translate( swidth , 17);
+        canvas.drawText("" + _per, 0, 0, textPaint);
 
         textPaint.setTextSize(40);
         textPaint.setTextAlign(Paint.Align.LEFT);
@@ -156,7 +159,7 @@ public class MassDashBoardView extends View {
 
         canvas.restore();
         canvas.save();
-        canvas.translate(canvas.getWidth()/2  , r + length / 3 /2 );
+        canvas.translate(canvas.getWidth()/2  + 70 , r + 15 );
         canvas.drawText("km" , 0, 0, textPaint);
     }
 
