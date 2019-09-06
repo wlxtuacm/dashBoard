@@ -8,7 +8,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -55,13 +54,13 @@ public class MainActivity extends AppCompatActivity {
     };
 
     //data read from driver through hal
-    private DashBoardData data = new DashBoardData();
+    private final DashBoardData data = new DashBoardData();
 
     //a handler for those operations like updating UI
     private final Handler handler = new Handler();
 
-    //a thread for reading data continuously from DashBoardService by polling
-    // , which has been replaced by Callback
+    //a thread for reading data continuously from DashBoardService by polling,
+    //which has been replaced by Callback
     @Deprecated
     protected Thread pollingThread = new Thread(){
         @Override
@@ -111,7 +110,6 @@ public class MainActivity extends AppCompatActivity {
         speedDash = findViewById(R.id.speed_dash);
         massDash = findViewById(R.id.mass_dash);
         leftTurnSignal = findViewById(R.id.leftTurnSignal);
-        Button reset = findViewById(R.id.reset);
 
         findViewById(R.id.rand).setOnClickListener(view -> {
             Random random = new Random();
@@ -125,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
-        reset.setOnClickListener(view -> {
+        findViewById(R.id.reset).setOnClickListener(view -> {
             data.reset();
             updateUI();
         });

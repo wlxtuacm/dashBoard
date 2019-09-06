@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
  * Created by atc0190
  * Date: 2019/9/03
  */
-public class DashBoardData {
+class DashBoardData {
 
     private static final String TAG = "DashBoardData";
 
