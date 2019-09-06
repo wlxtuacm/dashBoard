@@ -26,18 +26,17 @@ public class DashBoardService extends Service {
 
     private IDashBoard service;
 
-    private int fd;
-
-    //data from driver
+    //Info from driver
     private CarInfoData rawInfo;
-    //last different rawData
+    //last different rawInfo
     private CarInfoData preInfo;
 
+    //String parse from rawInfo
     private String rawData;
 
-    //hardcode for test mode
+    //hardcode only for test mode
     private boolean testMode;
-    private DashBoardData emulation;
+    private DashBoardData emulationData;
 
     public DashBoardService() {
     }
@@ -55,7 +54,7 @@ public class DashBoardService extends Service {
                         e.printStackTrace();
                     }
                 }else {
-                    rawData = emulation.getData();
+                    rawData = emulationData.getData();
                 }
 
                 if (preInfo.equals(rawInfo)) {
@@ -120,24 +119,25 @@ public class DashBoardService extends Service {
         try {
             service = IDashBoard.getService();
             if(!service.dashBoard_init()) {
-                Toast.makeText(getApplicationContext(), "init fail", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "init fail!", Toast.LENGTH_LONG).show();
+                Log.e(TAG, "init fail!");
             }
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (NoSuchElementException e) {
-            Log.e(TAG, "getService fail, now in test mode");
-            Toast.makeText(getApplicationContext(), "getService fail, now in test mode", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "getService fail, now in test mode!");
+            Toast.makeText(getApplicationContext(), "getService fail, now in test mode!", Toast.LENGTH_LONG).show();
             testMode = true;
-            emulation = new DashBoardData();
+            emulationData = new DashBoardData();
 
             new Thread(() -> {
                 Random random = new Random();
                 for(;;) {
-                    emulation.setData(random.nextInt(2) >= 1,
+                    emulationData.setData(random.nextInt(2) >= 1,
                             random.nextInt(DashBoardData.MAX_MASS + 20),
                             random.nextInt(DashBoardData.MAX_MILEAGE + 10000),
                             random.nextInt(DashBoardData.MAX_SPEED + 50));
-                    Log.d(TAG, "emulation " + emulation.getData());
+                    Log.d(TAG, "emulationData " + emulationData.getData());
                     try {
                         Thread.sleep(2000);
                     } catch (InterruptedException e1) {

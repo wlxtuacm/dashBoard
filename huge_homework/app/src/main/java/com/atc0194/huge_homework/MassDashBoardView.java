@@ -202,7 +202,7 @@ public class MassDashBoardView extends View {
             if(i == 0) {
                 canvas.drawText(String.valueOf(0),0, y - 20f, tmpPaint);
             } else if (i  == 2 || i == 4 || i == 8 ) {
-                canvas.drawText("1/"  + String.valueOf(16 / i) , 0, y - 20f, tmpPaint);
+                canvas.drawText("1/"  + 16 / i, 0, y - 20f, tmpPaint);
             } else if(i == 16) {
                 canvas.drawText(String.valueOf(1),0, y - 20f, tmpPaint);
             } else if(i == 12 ) {
