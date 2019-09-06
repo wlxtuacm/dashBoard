@@ -44,7 +44,6 @@ public class SpeedDashBoardView extends View {
         init();
     }
 
-
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = MeasureSpec.getSize(widthMeasureSpec);
         int height = width / 2 / 4 * 5;
