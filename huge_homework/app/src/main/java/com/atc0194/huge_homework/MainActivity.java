@@ -26,11 +26,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("native-lib");
-    }
-
     private SpeedDashBoardView speedDash;
     private MassDashBoardView massDash;
     private ImageView leftTurnSignal;
@@ -161,10 +156,5 @@ public class MainActivity extends AppCompatActivity {
         //pollingThread.interrupt();
         unbindService(dashBoardServiceConnection);
     }
-
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public native String stringFromJNI();
 }
+

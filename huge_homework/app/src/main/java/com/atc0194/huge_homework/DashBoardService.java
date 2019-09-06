@@ -2,7 +2,6 @@ package com.atc0194.huge_homework;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
@@ -12,6 +11,7 @@ import android.widget.Toast;
 import java.util.NoSuchElementException;
 import java.util.Random;
 
+import vendor.autochips.hardware.dashboard.V1_0.CarInfoData;
 import vendor.autochips.hardware.dashboard.V1_0.IDashBoard;
 
 /**
@@ -28,13 +28,14 @@ public class DashBoardService extends Service {
 
     private int fd;
 
-    private String busType = "I2C";
     //data from driver
-    private String rawData = "";
+    private CarInfoData rawInfo;
     //last different rawData
-    private String preData = "";
+    private CarInfoData preInfo;
 
-    //testMode use hardcode
+    private String rawData;
+
+    //hardcode for test mode
     private boolean testMode;
     private DashBoardData emulation;
 
@@ -49,7 +50,7 @@ public class DashBoardService extends Service {
             for(;;) {
                 if(!testMode) {
                     try {
-                        rawData = service.dashBoard_read(fd);
+                        rawInfo = service.dashBoard_getInfo();
                     } catch (RemoteException e) {
                         e.printStackTrace();
                     }
@@ -57,8 +58,12 @@ public class DashBoardService extends Service {
                     rawData = emulation.getData();
                 }
 
-                if (preData.equals(rawData))
+                if (preInfo.equals(rawInfo)) {
                     continue;
+                }else {
+                    rawData = "" + (rawInfo.turnleft ? 1 : 0) + rawInfo.mass + rawInfo.mileage +
+                            rawInfo.speed;
+                }
 
                 try {
                     Log.d(TAG, "callback rawData: " + rawData);
@@ -66,7 +71,7 @@ public class DashBoardService extends Service {
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
-                preData = rawData;
+                preInfo = rawInfo;
             }
         }).start();
 
@@ -114,12 +119,14 @@ public class DashBoardService extends Service {
 
         try {
             service = IDashBoard.getService();
-            fd = service.dashBoard_open(busType);
+            if(!service.dashBoard_init()) {
+                Toast.makeText(getApplicationContext(), "init fail", Toast.LENGTH_LONG).show();
+            }
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (NoSuchElementException e) {
             Log.e(TAG, "getService fail, now in test mode");
-            new Handler().post(() -> Toast.makeText(getApplicationContext(), "getService fail, now in test mode", Toast.LENGTH_LONG).show());
+            Toast.makeText(getApplicationContext(), "getService fail, now in test mode", Toast.LENGTH_LONG).show();
             testMode = true;
             emulation = new DashBoardData();
 
@@ -153,7 +160,7 @@ public class DashBoardService extends Service {
         mCallbacks.kill();
         if(!testMode) {
             try {
-                service.dashBoard_close(fd);
+                service.dashBoard_deinit();
             } catch (RemoteException e) {
                 e.printStackTrace();
             }

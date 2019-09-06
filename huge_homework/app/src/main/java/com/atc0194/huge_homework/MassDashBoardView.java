@@ -312,7 +312,6 @@ public class MassDashBoardView extends View {
         canvas.drawArc(rect, 0, 360, true, paint);
 
 
-
     }
 
 
