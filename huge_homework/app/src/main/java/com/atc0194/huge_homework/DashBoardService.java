@@ -38,6 +38,41 @@ public class DashBoardService extends Service {
     private boolean testMode;
     private DashBoardData emulationData;
 
+    private Thread pollingThread = new Thread(() -> {
+        for(;;) {
+            if(!testMode) {
+                try {
+                    rawInfo = service.dashBoard_getInfo();
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }else {
+                rawData = emulationData.getData();
+            }
+
+            if (preInfo.equals(rawInfo)) {
+                continue;
+            }else {
+                rawData = "" + (rawInfo.turnleft ? 1 : 0) + "_" + rawInfo.mass+ "_" +
+                        rawInfo.mileage+ "_" + rawInfo.speed;
+            }
+
+            try {
+                Log.d(TAG, "callback rawData: " + rawData);
+                callback(rawData);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+            preInfo = rawInfo;
+
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    });
+
     public DashBoardService() {
     }
 
@@ -45,35 +80,7 @@ public class DashBoardService extends Service {
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind: ");
 
-        new Thread(() -> {
-            for(;;) {
-                if(!testMode) {
-                    try {
-                        rawInfo = service.dashBoard_getInfo();
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }else {
-                    rawData = emulationData.getData();
-                }
-
-                if (preInfo.equals(rawInfo)) {
-                    continue;
-                }else {
-                    rawData = "" + (rawInfo.turnleft ? 1 : 0) + rawInfo.mass + rawInfo.mileage +
-                            rawInfo.speed;
-                }
-
-                try {
-                    Log.d(TAG, "callback rawData: " + rawData);
-                    callback(rawData);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-                preInfo = rawInfo;
-            }
-        }).start();
-
+        pollingThread.start();
         return dashBoardServiceStub;
     }
 
@@ -105,7 +112,7 @@ public class DashBoardService extends Service {
 
     private void callback(String rawData) throws RemoteException {
         final int len = mCallbacks.beginBroadcast();
-        for(int i = 0; i < len;i++) {
+        for(int i = 0; i < len; i++) {
             mCallbacks.getBroadcastItem(i).onResult(rawData);
         }
 
@@ -157,6 +164,7 @@ public class DashBoardService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        pollingThread.interrupt();
         mCallbacks.kill();
         if(!testMode) {
             try {
