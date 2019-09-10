@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Random;
 
+import vendor.autochips.hardware.dashboard.V1_0.CarInfoData;
+
 /**
  * Title:MainActivity
  * Description:前台Activity，实时显示和更新UI
@@ -39,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
                 dashBoardServiceProxy.registerCallback(mCallback);
             } catch (RemoteException e) {
                 e.printStackTrace();
+            } catch (NullPointerException e){
+                e.printStackTrace();
             }
         }
 
@@ -54,37 +58,10 @@ public class MainActivity extends AppCompatActivity {
     };
 
     //data read from driver through hal
-    private final DashBoardData data = new DashBoardData();
+    private final DashBoardData data = new DashBoardData(new CarInfoData());
 
     //a handler for those operations like updating UI
     private final Handler handler = new Handler();
-
-    //a thread for reading data continuously from DashBoardService by polling,
-    //which has been replaced by Callback
-    @Deprecated
-    protected Thread pollingThread = new Thread(){
-        @Override
-        public void run() {
-            while(dashBoardServiceProxy == null);
-            String rawData;
-            for (;;) {
-                try {
-                    rawData = dashBoardServiceProxy.getData();
-                    if(!data.checkIsSame(rawData)){
-                        continue;
-                    }
-                    data.parseData(rawData);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                } catch (IllegalArgumentException e){
-                    e.printStackTrace();
-                    handler.post(() -> Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show());
-                    continue;
-                }
-                updateUI();
-            }
-        }
-    };
 
     //Callback from DashBoardService
     private final IDashBoardCallback mCallback = new IDashBoardCallback.Stub() {
@@ -92,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         public void onResult(String rawData) throws RemoteException {
             try {
                 Log.d(TAG, "rawData: " + rawData);
-                data.parseData(rawData);
+                data.fromString(rawData);
             }catch (IllegalArgumentException e){
                 e.printStackTrace();
                 handler.post(() -> Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show());
@@ -111,32 +88,13 @@ public class MainActivity extends AppCompatActivity {
         massDash = findViewById(R.id.mass_dash);
         leftTurnSignal = findViewById(R.id.leftTurnSignal);
 
-        findViewById(R.id.rand).setOnClickListener(view -> {
-            Random random = new Random();
-            data.setData(random.nextInt(2) > 1,
-                    random.nextInt(DashBoardData.MAX_MASS),
-                    random.nextInt(DashBoardData.MAX_MILEAGE),
-                    random.nextInt(DashBoardData.MAX_SPEED));
-            Log.d(TAG, "emulation " + data.getData());
-
-            updateUI();
-
-        });
-
-        findViewById(R.id.reset).setOnClickListener(view -> {
-            data.reset();
-            updateUI();
-        });
-
         bindService(new Intent(MainActivity.this, DashBoardService.class),
                 dashBoardServiceConnection, BIND_AUTO_CREATE);
-
-        //pollingThread.start();
     }
 
     private void updateUI() {
         handler.post(() -> {
-            if (data.isTurnLeft()) {
+            if (data.isTurnleft()) {
                 FlashHelper.getInstance().startFlick(leftTurnSignal);
             } else {
                 FlashHelper.getInstance().stopFlick(leftTurnSignal);
