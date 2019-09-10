@@ -1,5 +1,9 @@
 package com.atc0194.huge_homework;
 
+import android.content.Intent;
+
+import vendor.autochips.hardware.dashboard.V1_0.CarInfoData;
+
 import androidx.annotation.NonNull;
 
 /**
@@ -19,120 +23,100 @@ class DashBoardData {
     //max speed: 100
     public static final int MAX_MASS = 100;
 
-    public static final int paramsNum = 4;
+    private CarInfoData rawData;
 
-    public static final String SPLITCHAR = "_";
-
-    private String lastRawData = "";
-
-    public String[] getSpitData() {
-        return spitData;
+    public DashBoardData(CarInfoData rawData) {
+        this.rawData = rawData;
     }
 
-    private String[] spitData;
-
-    private boolean turnLeft;
-    private int mass;
-    private int mileage;
-    private int speed;
-
-    public boolean isTurnLeft() {
-        return turnLeft;
+    public boolean isTurnleft() {
+        return rawData.turnleft;
     }
 
-    public void setTurnLeft(boolean turnLeft) {
-        this.turnLeft = turnLeft;
+    public void setTurnleft(boolean turnleft) {
+        this.rawData.turnleft = turnleft;
     }
 
     public int getMass() {
-        return mass;
+        return rawData.mass;
     }
 
-    public void setMass(int mass) {
-        this.mass = mass;
+    public void setMass(byte mass) {
+        this.rawData.mass = mass;
     }
 
     public int getMileage() {
-        return mileage;
+        return rawData.mileage;
     }
 
     public void setMileage(int mileage) {
-        this.mileage = mileage;
+        this.rawData.mileage = mileage;
     }
 
     public int getSpeed() {
-        return speed;
+        return rawData.speed;
     }
 
-    public void setSpeed(int speed) {
-        this.speed = speed;
+    public void setSpeed(byte speed) {
+        this.rawData.speed = speed;
     }
 
     private void checkParamsRange() {
-        if(Integer.valueOf(spitData[1]) < 0 || Integer.valueOf(spitData[1]) > MAX_MASS) {
-            throw new IllegalArgumentException("mass " + spitData[1] +
+        if(getMass() < 0 || getMass() > MAX_MASS) {
+            throw new IllegalArgumentException("mass " + getMass() +
                     " is out of range [0," + MAX_MASS + "]");
         }
 
-        if(Integer.valueOf(spitData[2]) < 0 || Integer.valueOf(spitData[2]) >= MAX_MILEAGE) {
-            throw new IllegalArgumentException("mileage " + spitData[2] +
+        if(getMileage() < 0 || getMileage() >= MAX_MILEAGE) {
+            throw new IllegalArgumentException("mileage " + getMileage() +
                     " is out of range [0," + MAX_MILEAGE + ")");
         }
 
-        if(Integer.valueOf(spitData[3]) < 0 || Integer.valueOf(spitData[3]) > MAX_SPEED) {
-            throw new IllegalArgumentException("speed " + spitData[3] +
+        if(getSpeed() < 0 || getSpeed() > MAX_SPEED) {
+            throw new IllegalArgumentException("speed " + getSpeed() +
                     " is out of range [0," + MAX_SPEED + "]");
         }
     }
 
-    private void checkParamsNum() {
-        if(spitData.length < paramsNum) {
-            throw new IllegalArgumentException("num of params < " + paramsNum);
+    public boolean checkIsSame(@NonNull CarInfoData newData) {
+        return rawData.equals(newData);
+    }
+
+
+    public CarInfoData getRawData() {
+        return rawData;
+    }
+
+    public void setRawData(CarInfoData rawData) {
+        this.rawData = rawData;
+    }
+
+    public boolean setRawDataAfterCheckIsSame(@NonNull CarInfoData rawData) {
+        if(checkIsSame(rawData))
+            return true;
+        this.rawData = rawData;
+
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "" + (isTurnleft() ? 1 : 0) + "_" + getMass() + "_" + getMileage() + "_"
+                + getSpeed();
+    }
+
+    public void fromString(@NonNull String str) {
+        String[] data = str.split("_");
+
+        if(rawData == null) {
+            setRawData(new CarInfoData());
         }
-    }
 
-    public boolean checkIsSame(@NonNull String rawData) {
-        return lastRawData.equals(rawData);
-    }
-
-    public void parseData() {
-        spitData = lastRawData.split(SPLITCHAR);
-
-        checkParamsNum();
+        setTurnleft(data[0].equals("1"));
+        setMass(Byte.valueOf(data[1]));
+        setMileage(Integer.valueOf(data[2]));
+        setSpeed(Byte.valueOf(data[3]));
 
         checkParamsRange();
-
-        turnLeft = spitData[0].equals("1");
-        mass = Integer.valueOf(spitData[1]);
-        mileage = Integer.valueOf(spitData[2]);
-        speed = Integer.valueOf(spitData[3]);
     }
-
-    public void parseData(@NonNull String rawData) {
-
-        if(checkIsSame(rawData)){
-            return;
-        }
-        lastRawData = rawData;
-
-        parseData();
-    }
-
-    public void setData(boolean turnLeft, int mass, int mileage, int speed){
-        lastRawData = "" + (turnLeft ? 1 : 0) + "_" + mass + "_" +mileage + "_" +speed;
-    }
-
-    public String getData() {
-        return lastRawData;
-    }
-
-    public void reset() {
-        lastRawData = "";
-        spitData = null;
-        turnLeft = false;
-        mass = 0;
-        mileage = 0;
-        speed = 0;
-    }
-
 }

@@ -26,13 +26,8 @@ public class DashBoardService extends Service {
 
     private IDashBoard service;
 
-    //Info from driver
-    private CarInfoData rawInfo;
-    //last different rawInfo
-    private CarInfoData preInfo;
-
-    //String parse from rawInfo
-    private String rawData;
+    //a wrapper of carInfo read from driver
+    private DashBoardData rawData = new DashBoardData(new CarInfoData());
 
     //hardcode only for test mode
     private boolean testMode;
@@ -42,31 +37,28 @@ public class DashBoardService extends Service {
         for(;;) {
             if(!testMode) {
                 try {
-                    rawInfo = service.dashBoard_getInfo();
+                    if(rawData.setRawDataAfterCheckIsSame(service.dashBoard_getInfo())){
+                        continue;
+                    }
+                    Log.d(TAG, "rawData: " + rawData.getRawData());
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
             }else {
-                rawData = emulationData.getData();
-            }
-
-            if (preInfo.equals(rawInfo)) {
-                continue;
-            }else {
-                rawData = "" + (rawInfo.turnleft ? 1 : 0) + "_" + rawInfo.mass+ "_" +
-                        rawInfo.mileage+ "_" + rawInfo.speed;
+                if(rawData.setRawDataAfterCheckIsSame(emulationData.getRawData())){
+                    continue;
+                }
             }
 
             try {
                 Log.d(TAG, "callback rawData: " + rawData);
-                callback(rawData);
+                callback(rawData.toString());
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
-            preInfo = rawInfo;
 
             try {
-                Thread.sleep(100);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -78,7 +70,39 @@ public class DashBoardService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        //android.os.Debug.waitForDebugger();
         Log.d(TAG, "onBind: ");
+        try {
+            service = IDashBoard.getService();
+            if(!service.dashBoard_init()) {
+                Toast.makeText(getApplicationContext(), "init fail!", Toast.LENGTH_LONG).show();
+                Log.e(TAG, "init fail!");
+                return null;
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (NoSuchElementException e) {
+            Log.e(TAG, "getService fail, now in test mode!");
+            Toast.makeText(getApplicationContext(), "getService fail, now in test mode!", Toast.LENGTH_LONG).show();
+            testMode = true;
+            emulationData = new DashBoardData(new CarInfoData());
+
+            new Thread(() -> {
+                Random random = new Random();
+                for(;;) {
+                    emulationData.setTurnleft(random.nextInt(2) >= 1);
+                    emulationData.setMass((byte) random.nextInt(DashBoardData.MAX_MASS + 20));
+                    emulationData.setMileage(random.nextInt(DashBoardData.MAX_MILEAGE + 10000));
+                    emulationData.setSpeed((byte) random.nextInt(DashBoardData.MAX_SPEED + 50));
+                    Log.d(TAG, "emulationData " + emulationData.getRawData());
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+            }).start();
+        }
 
         pollingThread.start();
         return dashBoardServiceStub;
@@ -89,11 +113,6 @@ public class DashBoardService extends Service {
 
     private final IDashBoardServiceInterface.Stub dashBoardServiceStub =
             new IDashBoardServiceInterface.Stub() {
-
-        @Override
-        public String getData() throws RemoteException {
-            return rawData;
-        }
 
         @Override
         public void registerCallback(IDashBoardCallback cb) throws RemoteException {
@@ -122,37 +141,6 @@ public class DashBoardService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        try {
-            service = IDashBoard.getService();
-            if(!service.dashBoard_init()) {
-                Toast.makeText(getApplicationContext(), "init fail!", Toast.LENGTH_LONG).show();
-                Log.e(TAG, "init fail!");
-            }
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        } catch (NoSuchElementException e) {
-            Log.e(TAG, "getService fail, now in test mode!");
-            Toast.makeText(getApplicationContext(), "getService fail, now in test mode!", Toast.LENGTH_LONG).show();
-            testMode = true;
-            emulationData = new DashBoardData();
-
-            new Thread(() -> {
-                Random random = new Random();
-                for(;;) {
-                    emulationData.setData(random.nextInt(2) >= 1,
-                            random.nextInt(DashBoardData.MAX_MASS + 20),
-                            random.nextInt(DashBoardData.MAX_MILEAGE + 10000),
-                            random.nextInt(DashBoardData.MAX_SPEED + 50));
-                    Log.d(TAG, "emulationData " + emulationData.getData());
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
-                }
-            }).start();
-        }
     }
 
     @Override

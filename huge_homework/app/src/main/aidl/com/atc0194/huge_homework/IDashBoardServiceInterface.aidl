@@ -6,7 +6,6 @@ package com.atc0194.huge_homework;
 import com.atc0194.huge_homework.IDashBoardCallback;
 
 interface IDashBoardServiceInterface {
-   String getData();
 
    void registerCallback(IDashBoardCallback cb);
    void unregisterCallback(IDashBoardCallback cb);
