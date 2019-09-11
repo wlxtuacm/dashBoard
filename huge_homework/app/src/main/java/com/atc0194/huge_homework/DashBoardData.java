@@ -62,17 +62,17 @@ class DashBoardData {
     }
 
     private void checkParamsRange() {
-        if(getMass() < 0 || getMass() > MAX_MASS) {
+        if(getMass() > MAX_MASS) {
             throw new IllegalArgumentException("mass " + getMass() +
                     " is out of range [0," + MAX_MASS + "]");
         }
 
-        if(getMileage() < 0 || getMileage() >= MAX_MILEAGE) {
+        if(getMileage() >= MAX_MILEAGE) {
             throw new IllegalArgumentException("mileage " + getMileage() +
                     " is out of range [0," + MAX_MILEAGE + ")");
         }
 
-        if(getSpeed() < 0 || getSpeed() > MAX_SPEED) {
+        if(getSpeed() > MAX_SPEED) {
             throw new IllegalArgumentException("speed " + getSpeed() +
                     " is out of range [0," + MAX_SPEED + "]");
         }
@@ -119,4 +119,5 @@ class DashBoardData {
 
         checkParamsRange();
     }
+
 }

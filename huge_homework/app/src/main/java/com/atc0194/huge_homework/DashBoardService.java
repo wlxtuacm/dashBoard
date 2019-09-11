@@ -9,7 +9,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.util.NoSuchElementException;
-import java.util.Random;
 
 import vendor.autochips.hardware.dashboard.V1_0.CarInfoData;
 import vendor.autochips.hardware.dashboard.V1_0.IDashBoard;
@@ -29,26 +28,17 @@ public class DashBoardService extends Service {
     //a wrapper of carInfo read from driver
     private DashBoardData rawData = new DashBoardData(new CarInfoData());
 
-    //hardcode only for test mode
-    private boolean testMode;
-    private DashBoardData emulationData;
-
     private Thread pollingThread = new Thread(() -> {
         for(;;) {
-            if(!testMode) {
-                try {
-                    if(rawData.setRawDataAfterCheckIsSame(service.dashBoard_getInfo())){
-                        continue;
-                    }
-                    Log.d(TAG, "rawData: " + rawData.getRawData());
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            }else {
-                if(rawData.setRawDataAfterCheckIsSame(emulationData.getRawData())){
+            try {
+                if(rawData.setRawDataAfterCheckIsSame(service.dashBoard_getInfo())){
                     continue;
                 }
+                Log.d(TAG, "rawData: " + rawData.getRawData());
+            } catch (RemoteException e) {
+                e.printStackTrace();
             }
+
 
             try {
                 Log.d(TAG, "callback rawData: " + rawData);
@@ -58,7 +48,7 @@ public class DashBoardService extends Service {
             }
 
             try {
-                Thread.sleep(2000);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -82,26 +72,8 @@ public class DashBoardService extends Service {
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (NoSuchElementException e) {
-            Log.e(TAG, "getService fail, now in test mode!");
-            Toast.makeText(getApplicationContext(), "getService fail, now in test mode!", Toast.LENGTH_LONG).show();
-            testMode = true;
-            emulationData = new DashBoardData(new CarInfoData());
-
-            new Thread(() -> {
-                Random random = new Random();
-                for(;;) {
-                    emulationData.setTurnleft(random.nextInt(2) >= 1);
-                    emulationData.setMass((byte) random.nextInt(DashBoardData.MAX_MASS + 20));
-                    emulationData.setMileage(random.nextInt(DashBoardData.MAX_MILEAGE + 10000));
-                    emulationData.setSpeed((byte) random.nextInt(DashBoardData.MAX_SPEED + 50));
-                    Log.d(TAG, "emulationData " + emulationData.getRawData());
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
-                }
-            }).start();
+            Log.e(TAG, "getService fail!");
+            Toast.makeText(getApplicationContext(), "getService fail!", Toast.LENGTH_LONG).show();
         }
 
         pollingThread.start();
@@ -154,12 +126,11 @@ public class DashBoardService extends Service {
         super.onDestroy();
         pollingThread.interrupt();
         mCallbacks.kill();
-        if(!testMode) {
-            try {
-                service.dashBoard_deinit();
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+        try {
+            service.dashBoard_deinit();
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
+
     }
 }

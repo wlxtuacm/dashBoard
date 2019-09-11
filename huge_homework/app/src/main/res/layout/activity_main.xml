@@ -39,21 +39,6 @@
         android:layout_marginTop="50dp"
         android:gravity="center">
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="random"
-            android:id="@+id/rand"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="100dp"
-            android:text="reset"
-            android:id="@+id/reset"
-            android:layout_marginStart="100dp" />
-
-
     </LinearLayout>
 
 </LinearLayout>

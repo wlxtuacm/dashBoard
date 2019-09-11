@@ -13,8 +13,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Random;
-
 import vendor.autochips.hardware.dashboard.V1_0.CarInfoData;
 
 /**
@@ -100,7 +98,8 @@ public class MainActivity extends AppCompatActivity {
                 FlashHelper.getInstance().stopFlick(leftTurnSignal);
             }
 
-            speedDash.cgangePer(data.getSpeed());
+            //workaround for speed > 127
+            speedDash.cgangePer(data.getSpeed() & 0x0ff);
             massDash.cgangePer(data.getMass());
             massDash.setMileage(data.getMileage());
         });
