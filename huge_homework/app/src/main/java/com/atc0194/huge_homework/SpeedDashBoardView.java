@@ -251,19 +251,16 @@ public class SpeedDashBoardView extends View {
 
         //前100红黄渐变圆环
         paint.setStyle(Paint.Style.FILL);
-        int[] colors = { Color.parseColor("#2EFE64"), Color.parseColor("#0B6138"), Color.parseColor("#01DF3A")};
+        int[] colors = {Color.parseColor("#32CD32"), Color.parseColor("#f9cf45"), Color.parseColor("#8B4513")};
         float[] positions = {0.5f - 10f/180f * 0.5f, 0.5f + 0.5f * 5f / 6f, 1.0f};
         SweepGradient sweepGradient = new SweepGradient(0, 0, colors, positions);
         paint.setShader(sweepGradient);
         rect = new RectF( -length, -length, length, length);
         canvas.drawArc(rect, 170, 10f + 180f / 6f * 5f, true, paint);
 
-
-
-        //100之后绿色渐变圆环
         paint.setStyle(Paint.Style.FILL);
         canvas.rotate(10,0f,0f);
-        int[] colors2 = {Color.parseColor("#F95A37"), Color.parseColor("#f9cf45")};
+        int[] colors2 = { Color.parseColor("#f9cf45"), Color.parseColor("#B22222")};
         float[] positions2 = {0.5f + 0.5f * ( 144f / 180f), 1.0f};
         sweepGradient = new SweepGradient(0, 0, colors2, positions2);
         paint.setShader(sweepGradient);

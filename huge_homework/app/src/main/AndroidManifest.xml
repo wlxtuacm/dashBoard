@@ -3,6 +3,7 @@
     package="com.atc0194.huge_homework">
 
     <application
+        android:sharedUserId="android.uid.system"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
