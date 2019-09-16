@@ -23,13 +23,18 @@ public class FlashHelper {
         return FlashHelper.Holder.instance;
     }
 
+    Animation alphaAnimation;
 
     /**开启View闪烁效果**/
     public void startFlick( View view ) {
         if (null == view) {
             return;
         }
-        Animation alphaAnimation = new AlphaAnimation(1, 0);
+
+        if(alphaAnimation != null && !alphaAnimation.hasEnded()) {
+            return;
+        }
+        alphaAnimation = new AlphaAnimation(1, 0);
         alphaAnimation.setDuration(300);
         alphaAnimation.setInterpolator(new LinearInterpolator());
         alphaAnimation.setRepeatCount(Animation.INFINITE);

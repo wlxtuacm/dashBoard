@@ -69,11 +69,11 @@ public class DashBoardService extends Service {
                 Log.e(TAG, "init fail!");
                 return null;
             }
-        } catch (RemoteException e) {
+        } catch (NoSuchElementException | RemoteException e) {
             e.printStackTrace();
-        } catch (NoSuchElementException e) {
             Log.e(TAG, "getService fail!");
             Toast.makeText(getApplicationContext(), "getService fail!", Toast.LENGTH_LONG).show();
+            return null;
         }
 
         pollingThread.start();
